@@ -46,11 +46,17 @@ func (o *TCPOutput) worker() {
 	defer conn.Close()
 
 	for {
-		conn.Write(<-o.buf)
-		_, err := conn.Write([]byte(payloadSeparator))
+		_, err := conn.Write(<-o.buf)
+		if err != nil {
+			log.Printf("Worker failed on write, exitings and starting new worker  - %s", err)
+			go o.worker()
+			break
+		}
+
+		_, err = conn.Write([]byte(payloadSeparator))
 
 		if err != nil {
-			log.Println("Worker failed on write, exitings and starting new worker")
+			log.Printf("Worker failed on write, exitings and starting new worker  - %s", err)
 			go o.worker()
 			break
 		}
